@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BIZ UI 버튼 액션 가이드</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --yellow: #FEE500;
+      --black: #1A1A1A;
+      --white: #FFFFFF;
+      --gray-100: #F7F8FA;
+      --gray-200: #E5E8EC;
+      --gray-500: #6B7280;
+      --green: #00C16A;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans KR', -apple-system, sans-serif;
+      background: #111;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      user-select: none;
+    }
+
+    /* ── Progress & Counter ── */
+    #progressBar {
+      position: fixed; bottom: 0; left: 0; height: 3px;
+      background: var(--yellow); transition: width .45s ease; z-index: 999;
+    }
+    #slideCounter {
+      position: fixed; bottom: 16px; right: 28px;
+      color: rgba(255,255,255,.35); font-size: 13px; z-index: 999;
+      letter-spacing: .5px;
+    }
+
+    /* ── Nav Buttons ── */
+    .nav-btn {
+      position: fixed; top: 50%; transform: translateY(-50%);
+      background: rgba(255,255,255,.08); backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.7);
+      width: 44px; height: 44px; border-radius: 50%; cursor: pointer;
+      font-size: 18px; display: flex; align-items: center; justify-content: center;
+      z-index: 999; transition: background .2s, color .2s;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,.18); color: #fff; }
+    .nav-prev { left: 16px; }
+    .nav-next { right: 16px; }
+
+    /* ── Dot Indicators ── */
+    #dotNav {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 8px; z-index: 999;
+    }
+    .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(255,255,255,.25); cursor: pointer;
+      transition: background .3s, width .3s; border-radius: 4px;
+    }
+    .dot.active { background: var(--yellow); width: 24px; }
+
+    /* ── Slides ── */
+    .slides { position: relative; width: 100vw; height: 100vh; }
+
+    .slide {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transform: translateX(60px);
+      transition: opacity .5s cubic-bezier(.4,0,.2,1), transform .5s cubic-bezier(.4,0,.2,1);
+      pointer-events: none;
+    }
+    .slide.active { opacity: 1; transform: translateX(0); pointer-events: all; }
+    .slide.exit   { opacity: 0; transform: translateX(-60px); }
+
+    /* ── Shared Util ── */
+    .tag {
+      display: inline-block; background: var(--yellow); color: var(--black);
+      font-size: 10px; font-weight: 800; padding: 4px 12px;
+      border-radius: 100px; letter-spacing: 2px; text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .tag.dark { background: rgba(255,255,255,.08); color: rgba(255,255,255,.6); }
+
+    /* ════════════════════════════════════
+       SLIDE 1 — TITLE
+    ════════════════════════════════════ */
+    .s1 { background: var(--yellow); overflow: hidden; }
+
+    .s1-blob {
+      position: absolute; border-radius: 50%;
+      background: rgba(0,0,0,.055); pointer-events: none;
+    }
+
+    @keyframes floatY {
+      0%,100% { transform: translateY(0) rotate(0deg); }
+      50%      { transform: translateY(-28px) rotate(8deg); }
+    }
+    @keyframes floatYR {
+      0%,100% { transform: translateY(0) rotate(0deg); }
+      50%      { transform: translateY(-20px) rotate(-6deg); }
+    }
+
+    .s1-content { position: relative; z-index: 1; text-align: center; }
+
+    .kakao-mark {
+      width: 72px; height: 72px;
+      background: var(--black); border-radius: 22px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 28px; font-size: 36px;
+      box-shadow: 0 12px 32px rgba(0,0,0,.2);
+    }
+
+    .s1 h1 {
+      font-size: clamp(40px, 5.5vw, 68px);
+      font-weight: 900; color: var(--black); line-height: 1.08;
+      letter-spacing: -2px; margin-bottom: 18px;
+    }
+    .s1 .sub {
+      font-size: 18px; color: rgba(26,26,26,.55);
+      font-weight: 400; margin-bottom: 40px;
+    }
+    .badge-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .badge {
+      background: rgba(0,0,0,.09); padding: 7px 18px;
+      border-radius: 100px; font-size: 13px; font-weight: 600;
+      color: var(--black); backdrop-filter: blur(8px);
+    }
+
+    /* ════════════════════════════════════
+       SLIDE 2 — OVERVIEW
+    ════════════════════════════════════ */
+    .s2 { background: #0E0E0E; }
+
+    .s2-inner { text-align: center; padding: 0 32px; }
+    .s2 h2 {
+      font-size: clamp(28px, 3.5vw, 44px); font-weight: 800;
+      color: #fff; margin-bottom: 52px;
+    }
+
+    .overview-grid {
+      display: grid; grid-template-columns: repeat(3, 280px);
+      gap: 20px; justify-content: center;
+    }
+
+    .ov-card {
+      background: #181818; border: 1px solid #242424;
+      border-radius: 24px; padding: 40px 28px 36px;
+      opacity: 0; transform: translateY(36px);
+      transition: opacity .5s ease, transform .5s ease, border-color .3s;
+    }
+    .ov-card:hover { border-color: var(--yellow); }
+    .slide.active .ov-card:nth-child(1) { opacity:1; transform:translateY(0); transition-delay:.1s; }
+    .slide.active .ov-card:nth-child(2) { opacity:1; transform:translateY(0); transition-delay:.25s; }
+    .slide.active .ov-card:nth-child(3) { opacity:1; transform:translateY(0); transition-delay:.4s; }
+
+    .ov-icon {
+      width: 60px; height: 60px; background: var(--yellow);
+      border-radius: 18px; display: flex; align-items: center;
+      justify-content: center; font-size: 26px;
+      margin: 0 auto 22px;
+    }
+    .ov-card h3 { color: #fff; font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+    .ov-card p  { color: var(--gray-500); font-size: 13px; line-height: 1.7; }
+
+    /* ════════════════════════════════════
+       PHONE MOCKUP (shared)
+    ════════════════════════════════════ */
+    .phone {
+      width: 248px; height: 500px;
+      background: #1C1C1E; border-radius: 44px; padding: 12px;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.1),
+        0 40px 80px rgba(0,0,0,.55),
+        inset 0 1px 0 rgba(255,255,255,.13);
+      position: relative; flex-shrink: 0;
+    }
+    .phone-screen {
+      width: 100%; height: 100%; background: #F7F8FA;
+      border-radius: 34px; overflow: hidden;
+      display: flex; flex-direction: column; position: relative;
+    }
+    .island {
+      position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
+      width: 112px; height: 32px; background: #1C1C1E;
+      border-radius: 20px; z-index: 10;
+    }
+    .kk-header {
+      background: #fff; padding: 50px 14px 10px;
+      display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid #E5E8EC; flex-shrink: 0;
+    }
+    .kk-back  { font-size: 16px; color: #1A1A1A; cursor: pointer; }
+    .kk-title { font-size: 13px; font-weight: 700; color: #1A1A1A; flex: 1; }
+    .kk-more  { font-size: 16px; color: #888; }
+    .kk-body  { flex: 1; padding: 14px 10px; overflow: hidden; }
+    .bubble {
+      background: #fff; border-radius: 4px 14px 14px 14px;
+      padding: 10px 12px; font-size: 11px; line-height: 1.55;
+      box-shadow: 0 1px 4px rgba(0,0,0,.09); max-width: 92%;
+    }
+    .bubble-brand { font-size: 10px; font-weight: 700; color: #3C1E1E; margin-bottom: 5px; }
+    .bubble-text  { color: #333; }
+    .kk-btn {
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      background: var(--yellow); border: none; border-radius: 8px;
+      padding: 9px 12px; font-size: 11px; font-weight: 700; color: #1A1A1A;
+      width: 100%; cursor: pointer; margin-top: 8px;
+      transition: transform .12s, filter .12s;
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+    .kk-btn:active  { transform: scale(.96); }
+    .kk-btn:hover   { filter: brightness(1.04); }
+    .kk-btn.blue    { background: #E8F4FF; color: #1565C0; }
+    .phone-bar {
+      background: #fff; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      border-top: 1px solid #E5E8EC; flex-shrink: 0;
+    }
+    .home-bar { width: 108px; height: 4px; background: rgba(0,0,0,.18); border-radius: 2px; }
+
+    /* ════════════════════════════════════
+       SLIDE 3 — WEBLINK
+    ════════════════════════════════════ */
+    .s3 { background: #0A0A0A; }
+
+    .two-col {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 72px; max-width: 1060px; align-items: center;
+      padding: 0 40px;
+    }
+    .col-left  { display: flex; justify-content: center; position: relative; }
+    .col-right h2 {
+      font-size: clamp(26px,3vw,38px); font-weight: 800;
+      color: #fff; margin-bottom: 10px; line-height: 1.2;
+    }
+    .col-right .lead { color: var(--gray-500); font-size: 14px; line-height: 1.75; margin-bottom: 28px; }
+
+    .steps { display: flex; flex-direction: column; gap: 18px; }
+    .step  { display: flex; align-items: flex-start; gap: 14px; opacity:0; transform:translateX(18px); transition: opacity .4s, transform .4s; }
+    .slide.active .step:nth-child(1) { opacity:1; transform:translateX(0); transition-delay:.15s; }
+    .slide.active .step:nth-child(2) { opacity:1; transform:translateX(0); transition-delay:.30s; }
+    .slide.active .step:nth-child(3) { opacity:1; transform:translateX(0); transition-delay:.45s; }
+    .step-n {
+      width: 30px; height: 30px; background: var(--yellow);
+      border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: 13px; font-weight: 800;
+      color: var(--black); flex-shrink: 0; margin-top: 2px;
+    }
+    .step-text h4 { color: #fff; font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+    .step-text p  { color: var(--gray-500); font-size: 12px; line-height: 1.6; }
+
+    .hint {
+      margin-top: 24px; padding: 10px 14px;
+      background: rgba(254,229,0,.07);
+      border-left: 3px solid var(--yellow);
+      border-radius: 0 8px 8px 0;
+    }
+    .hint p { color: #FEE500; font-size: 12px; font-weight: 600; }
+
+    /* browser sheet */
+    .browser-sheet {
+      position: absolute; bottom: 0; left: 50%; width: 248px;
+      transform: translateX(-50%) translateY(105%);
+      background: #fff; border-radius: 20px 20px 0 0;
+      box-shadow: 0 -12px 40px rgba(0,0,0,.35);
+      z-index: 20; transition: transform .5s cubic-bezier(.34,1.3,.64,1);
+      overflow: hidden;
+    }
+    .browser-sheet.open { transform: translateX(-50%) translateY(0); }
+    .b-handle { width: 36px; height: 4px; background: #ddd; border-radius: 2px; margin: 10px auto 0; }
+    .b-bar {
+      margin: 10px 12px 8px;
+      background: #F0F2F5; border-radius: 8px;
+      padding: 7px 10px; font-size: 10px; color: #888;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .b-content {
+      margin: 0 12px 12px; height: 130px;
+      background: linear-gradient(135deg, #FEE500 0%, #FFCD00 100%);
+      border-radius: 10px; display: flex; align-items: center;
+      justify-content: center; font-size: 13px; font-weight: 800; color: #1A1A1A;
+    }
+    .b-close {
+      width: calc(100% - 24px); margin: 0 12px 12px;
+      background: none; border: 1px solid #ddd; border-radius: 8px;
+      padding: 8px; font-size: 11px; cursor: pointer;
+      font-family: inherit; color: #666;
+    }
+
+    /* ════════════════════════════════════
+       SLIDE 4 — APPLINK
+    ════════════════════════════════════ */
+    .s4 { background: #08080F; }
+
+    .path-list { display: flex; flex-direction: column; gap: 14px; margin-top: 20px; }
+    .path-row {
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px; padding: 16px 18px;
+      display: flex; align-items: center; gap: 14px;
+      opacity:0; transform:translateX(18px);
+      transition: opacity .4s, transform .4s;
+    }
+    .slide.active .path-row:nth-child(1) { opacity:1; transform:translateX(0); transition-delay:.2s; }
+    .slide.active .path-row:nth-child(2) { opacity:1; transform:translateX(0); transition-delay:.38s; }
+    .path-ic {
+      width: 42px; height: 42px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .path-ic.g  { background: rgba(0,193,106,.15); }
+    .path-ic.or { background: rgba(255,149,0,.15); }
+    .path-row h4 { color: #fff; font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+    .path-row p  { color: var(--gray-500); font-size: 11px; line-height: 1.6; }
+
+    .info-box {
+      margin-top: 18px; padding: 12px 14px;
+      background: rgba(255,255,255,.04); border-radius: 12px;
+      opacity:0; transition: opacity .4s .55s;
+    }
+    .slide.active .info-box { opacity: 1; }
+    .info-box p { color: #9CA3AF; font-size: 12px; line-height: 1.75; }
+    .info-box strong { color: #fff; }
+
+    /* applink btn feedback */
+    @keyframes applinkPulse {
+      0%   { box-shadow: 0 0 0 0 rgba(100,160,255,.5); }
+      100% { box-shadow: 0 0 0 16px rgba(100,160,255,0); }
+    }
+    .kk-btn.blue.pulse { animation: applinkPulse .6s ease forwards; }
+
+    /* ════════════════════════════════════
+       SLIDE 5 — COUPON / PHONE
+    ════════════════════════════════════ */
+    .s5 { background: #0C0C0C; }
+
+    .s5-inner { display:flex; flex-direction:column; align-items:center; width:100%; gap:0; }
+    .s5 h2 {
+      font-size: clamp(26px,3vw,36px); font-weight: 800;
+      color: #fff; text-align: center; margin-bottom: 36px;
+    }
+
+    .split-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 24px; max-width: 860px; width: 100%; padding: 0 32px;
+    }
+
+    .demo-card {
+      background: #181818; border: 1px solid #242424;
+      border-radius: 24px; padding: 36px 28px;
+      text-align: center;
+      opacity:0; transform:translateY(28px);
+      transition: opacity .5s, transform .5s;
+    }
+    .slide.active .demo-card:nth-child(1) { opacity:1; transform:translateY(0); transition-delay:.12s; }
+    .slide.active .demo-card:nth-child(2) { opacity:1; transform:translateY(0); transition-delay:.27s; }
+    .demo-card .di { font-size: 44px; display: block; margin-bottom: 16px; }
+    .demo-card h3  { color: #fff; font-size: 20px; font-weight: 800; margin-bottom: 10px; }
+    .demo-card p   { color: var(--gray-500); font-size: 13px; line-height: 1.7; margin-bottom: 24px; }
+
+    /* coupon ticket */
+    .ticket-wrap { height: 54px; display:flex; align-items:center; justify-content:center; margin-bottom: 20px; }
+    .ticket {
+      background: var(--yellow); border-radius: 8px;
+      padding: 0 22px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800; color: var(--black);
+      position: relative; cursor: default;
+    }
+    .ticket::before, .ticket::after {
+      content: ''; position: absolute; width: 14px; height: 14px;
+      background: #181818; border-radius: 50%;
+      top: 50%; transform: translateY(-50%);
+    }
+    .ticket::before { left: -7px; }
+    .ticket::after  { right: -7px; }
+
+    @keyframes ticketPop {
+      0%   { transform: scale(1) translateY(0); }
+      30%  { transform: scale(1.08) translateY(-14px); }
+      60%  { transform: scale(.97) translateY(-6px); }
+      80%  { transform: scale(1.02) translateY(-10px); }
+      100% { transform: scale(1) translateY(0); }
+    }
+    .ticket.pop { animation: ticketPop .65s ease forwards; }
+
+    /* dial */
+    .dial-wrap { height: 54px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
+    .dial-ring {
+      width: 54px; height: 54px; background: var(--green);
+      border-radius: 50%; display:flex; align-items:center;
+      justify-content:center; font-size: 26px;
+    }
+    @keyframes ringPulse {
+      0%   { box-shadow: 0 0 0 0 rgba(0,193,106,.55); }
+      70%  { box-shadow: 0 0 0 22px rgba(0,193,106,0); }
+      100% { box-shadow: 0 0 0 0 rgba(0,193,106,0); }
+    }
+    .dial-ring.ring { animation: ringPulse 1s ease 3; }
+
+    .cta-y {
+      background: var(--yellow); color: var(--black);
+      border: none; border-radius: 12px;
+      padding: 11px 24px; font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+      transition: transform .15s, box-shadow .15s;
+    }
+    .cta-y:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(254,229,0,.35); }
+
+    .cta-g {
+      background: var(--green); color: #fff;
+      border: none; border-radius: 12px;
+      padding: 11px 24px; font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+      transition: transform .15s, box-shadow .15s;
+    }
+    .cta-g:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,193,106,.35); }
+
+    /* ════════════════════════════════════
+       SLIDE 6 — SUMMARY
+    ════════════════════════════════════ */
+    .s6 { background: var(--yellow); }
+
+    .s6 h2 {
+      font-size: clamp(32px,4.5vw,54px); font-weight: 900;
+      color: var(--black); text-align: center; line-height: 1.1;
+      letter-spacing: -1.5px; margin-bottom: 14px;
+    }
+    .s6 .sub2 {
+      text-align: center; color: rgba(26,26,26,.55);
+      font-size: 16px; margin-bottom: 48px;
+    }
+
+    .sum-grid {
+      display: grid; grid-template-columns: repeat(3, 220px);
+      gap: 20px; justify-content: center;
+    }
+    .sum-card {
+      background: rgba(0,0,0,.07); border-radius: 20px;
+      padding: 30px 22px; text-align: center;
+      opacity:0; transform:translateY(18px);
+      transition: opacity .5s, transform .5s;
+    }
+    .slide.active .sum-card:nth-child(1) { opacity:1; transform:translateY(0); transition-delay:.1s; }
+    .slide.active .sum-card:nth-child(2) { opacity:1; transform:translateY(0); transition-delay:.25s; }
+    .slide.active .sum-card:nth-child(3) { opacity:1; transform:translateY(0); transition-delay:.4s; }
+    .sum-card .si   { font-size: 32px; display:block; margin-bottom:12px; }
+    .sum-card .sn   { font-size: 15px; font-weight: 800; color: var(--black); margin-bottom: 8px; }
+    .sum-card .sd   { font-size: 12px; color: rgba(26,26,26,.55); line-height: 1.6; }
+
+    .cta-area {
+      margin-top: 40px; text-align:center;
+      opacity:0; transition: opacity .5s .55s;
+    }
+    .slide.active .cta-area { opacity:1; }
+    .cta-dark {
+      background: var(--black); color: var(--yellow);
+      border: none; padding: 15px 40px; border-radius: 100px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      font-family: inherit; letter-spacing: -.3px;
+      transition: transform .15s, box-shadow .15s;
+    }
+    .cta-dark:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,.25); }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <button class="nav-btn nav-prev" id="btnPrev">&#8592;</button>
+  <button class="nav-btn nav-next" id="btnNext">&#8594;</button>
+  <div id="progressBar"></div>
+  <div id="slideCounter"></div>
+  <div id="dotNav"></div>
+
+  <div class="slides">
+
+    <!-- ████ SLIDE 1 — TITLE ████ -->
+    <div class="slide s1 active">
+      <div class="s1-blob" style="width:220px;height:220px;top:-60px;right:120px;animation:floatY 7s ease-in-out infinite;"></div>
+      <div class="s1-blob" style="width:140px;height:140px;bottom:80px;left:60px;animation:floatYR 5.5s ease-in-out infinite 1s;"></div>
+      <div class="s1-blob" style="width:90px;height:90px;top:180px;left:180px;animation:floatY 6s ease-in-out infinite 2s;"></div>
+      <div class="s1-blob" style="width:320px;height:320px;bottom:-100px;right:-60px;animation:floatYR 8s ease-in-out infinite .5s;"></div>
+      <div class="s1-content">
+        <div class="kakao-mark">💬</div>
+        <h1>BIZ UI<br>버튼 액션 가이드</h1>
+        <p class="sub">스마트폰 화면에서 버튼이 동작하는 방식</p>
+        <div class="badge-row">
+          <span class="badge">🌐 웹링크 버튼</span>
+          <span class="badge">📱 앱링크 버튼</span>
+          <span class="badge">🎫 쿠폰/전화 버튼</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ████ SLIDE 2 — OVERVIEW ████ -->
+    <div class="slide s2">
+      <div class="s2-inner">
+        <span class="tag dark">BUTTON TYPES</span>
+        <h2>3가지 버튼 액션 유형</h2>
+        <div class="overview-grid">
+          <div class="ov-card">
+            <div class="ov-icon">🌐</div>
+            <h3>웹링크 버튼</h3>
+            <p>버튼 탭 시 인앱 브라우저로<br>설정된 URL 페이지를 표시합니다</p>
+          </div>
+          <div class="ov-card">
+            <div class="ov-icon">📱</div>
+            <h3>앱링크 버튼</h3>
+            <p>앱 딥링크를 통해 특정 화면으로<br>이동하거나 앱스토어로 연결됩니다</p>
+          </div>
+          <div class="ov-card">
+            <div class="ov-icon">🎫</div>
+            <h3>쿠폰/전화 버튼</h3>
+            <p>쿠폰을 즉시 다운로드하거나<br>전화 연결을 실행합니다</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ████ SLIDE 3 — WEBLINK ████ -->
+    <div class="slide s3">
+      <div class="two-col">
+        <div class="col-left">
+          <!-- Phone -->
+          <div class="phone">
+            <div class="phone-screen">
+              <div class="island"></div>
+              <div class="kk-header">
+                <span class="kk-back">←</span>
+                <span class="kk-title">매장 이벤트 알림</span>
+                <span class="kk-more">⋮</span>
+              </div>
+              <div class="kk-body">
+                <div class="bubble">
+                  <div class="bubble-brand">강남역 본점</div>
+                  <div class="bubble-text">강남역 본점 특별 이벤트가 시작되었습니다! 지금 바로 확인해보세요 🎉</div>
+                  <button class="kk-btn" id="weblinkBtn" onclick="openBrowser()">🌐 이벤트 페이지 보기</button>
+                </div>
+              </div>
+              <div class="phone-bar"><div class="home-bar"></div></div>
+
+              <!-- Browser Sheet (overlaid on screen) -->
+              <div class="browser-sheet" id="browserSheet">
+                <div class="b-handle"></div>
+                <div class="b-bar">🔒 event.kakao.com/gangnam</div>
+                <div class="b-content">강남역 본점 이벤트 🎉</div>
+                <button class="b-close" onclick="closeBrowser()">✕ 닫기</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-right">
+          <span class="tag">WEBLINK</span>
+          <h2>웹링크 버튼</h2>
+          <p class="lead">버튼 탭 시 카카오톡 내 인앱 브라우저가<br>실행되어 설정된 URL 페이지를 표시합니다.</p>
+          <div class="steps">
+            <div class="step">
+              <div class="step-n">1</div>
+              <div class="step-text">
+                <h4>사용자가 버튼 탭</h4>
+                <p>메시지 카드 내 웹링크 버튼을 터치합니다</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-n">2</div>
+              <div class="step-text">
+                <h4>인앱 브라우저 실행</h4>
+                <p>카카오톡 내부 브라우저가 슬라이드 업으로 열립니다</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-n">3</div>
+              <div class="step-text">
+                <h4>설정된 URL 페이지 표시</h4>
+                <p>지정한 랜딩 페이지가 즉시 로드됩니다</p>
+              </div>
+            </div>
+          </div>
+          <div class="hint"><p>👆 왼쪽 폰의 버튼을 탭해보세요!</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ████ SLIDE 4 — APPLINK ████ -->
+    <div class="slide s4">
+      <div class="two-col">
+        <div class="col-left">
+          <div class="phone">
+            <div class="phone-screen">
+              <div class="island"></div>
+              <div class="kk-header">
+                <span class="kk-back">←</span>
+                <span class="kk-title">쇼핑 알림</span>
+                <span class="kk-more">⋮</span>
+              </div>
+              <div class="kk-body">
+                <div class="bubble">
+                  <div class="bubble-brand">쇼핑 알림</div>
+                  <div class="bubble-text">관심 상품이 할인 중입니다!<br>지금 바로 확인해보세요 🛍️</div>
+                  <button class="kk-btn blue" id="applinkBtn" onclick="triggerApplink()">📱 앱에서 보기</button>
+                </div>
+              </div>
+              <div class="phone-bar"><div class="home-bar"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-right">
+          <span class="tag">APPLINK</span>
+          <h2>앱링크 버튼</h2>
+          <p class="lead">딥링크를 통해 특정 앱 화면으로 직접 이동합니다.<br>앱 설치 여부에 따라 동작이 분기됩니다.</p>
+          <div class="path-list">
+            <div class="path-row">
+              <div class="path-ic g">✅</div>
+              <div>
+                <h4>앱 설치 시</h4>
+                <p>딥링크를 통해 앱 내 특정 화면으로 즉시 이동<br>예: 상품 상세, 이벤트 페이지, 마이페이지</p>
+              </div>
+            </div>
+            <div class="path-row">
+              <div class="path-ic or">📥</div>
+              <div>
+                <h4>미설치 시</h4>
+                <p>App Store / Play Store로 자동 이동<br>설치 후 목적지 화면으로 이동 가능</p>
+              </div>
+            </div>
+          </div>
+          <div class="info-box">
+            <p>💡 <strong>scheme://</strong> 형태의 딥링크 URL을 설정하여<br>원하는 화면으로 정확하게 유도할 수 있습니다</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ████ SLIDE 5 — COUPON/PHONE ████ -->
+    <div class="slide s5">
+      <div class="s5-inner">
+        <span class="tag dark" style="margin-bottom:10px;">COUPON &amp; PHONE</span>
+        <h2>쿠폰 / 전화 버튼</h2>
+        <div class="split-grid">
+          <div class="demo-card">
+            <span class="di">🎫</span>
+            <h3>쿠폰 버튼</h3>
+            <p>버튼 탭 시 쿠폰이 즉시 다운로드되어<br>카카오톡 쿠폰함에 저장됩니다</p>
+            <div class="ticket-wrap">
+              <div class="ticket" id="couponTicket">10% 할인 쿠폰</div>
+            </div>
+            <button class="cta-y" onclick="triggerCoupon()">🎫 쿠폰 받기 체험</button>
+          </div>
+          <div class="demo-card">
+            <span class="di">📞</span>
+            <h3>전화 버튼</h3>
+            <p>버튼 탭 시 등록된 전화번호로<br>즉시 전화 연결이 실행됩니다</p>
+            <div class="dial-wrap">
+              <div class="dial-ring" id="dialRing">📞</div>
+            </div>
+            <button class="cta-g" onclick="triggerDial()">📞 전화 연결 체험</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ████ SLIDE 6 — SUMMARY ████ -->
+    <div class="slide s6">
+      <div style="display:flex;flex-direction:column;align-items:center;width:100%;padding:0 32px;">
+        <h2>버튼 액션으로<br>더 스마트한 비즈 메시지</h2>
+        <p class="sub2">3가지 버튼으로 목적에 맞는 최적의 고객 경험을 설계하세요</p>
+        <div class="sum-grid">
+          <div class="sum-card">
+            <span class="si">🌐</span>
+            <div class="sn">웹링크 버튼</div>
+            <div class="sd">인앱 브라우저로<br>랜딩페이지 연결</div>
+          </div>
+          <div class="sum-card">
+            <span class="si">📱</span>
+            <div class="sn">앱링크 버튼</div>
+            <div class="sd">딥링크로<br>앱 내 화면 이동</div>
+          </div>
+          <div class="sum-card">
+            <span class="si">🎫</span>
+            <div class="sn">쿠폰/전화 버튼</div>
+            <div class="sd">즉시 쿠폰 발급 또는<br>전화 연결</div>
+          </div>
+        </div>
+        <div class="cta-area">
+          <button class="cta-dark">BIZ UI 가이드 바로가기 →</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /slides -->
+
+  <script>
+    // ── State ──────────────────────────────
+    const slides   = Array.from(document.querySelectorAll('.slide'));
+    const total    = slides.length;
+    let   cur      = 0;
+    let   animLock = false;
+
+    // ── Build dot nav ──────────────────────
+    const dotNav = document.getElementById('dotNav');
+    slides.forEach((_, i) => {
+      const d = document.createElement('div');
+      d.className = 'dot' + (i === 0 ? ' active' : '');
+      d.onclick = () => goTo(i);
+      dotNav.appendChild(d);
+    });
+
+    function updateUI() {
+      document.getElementById('progressBar').style.width = ((cur + 1) / total * 100) + '%';
+      document.getElementById('slideCounter').textContent = (cur + 1) + ' / ' + total;
+      dotNav.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === cur));
+      document.getElementById('btnPrev').style.opacity = cur === 0       ? '.25' : '1';
+      document.getElementById('btnNext').style.opacity = cur === total-1 ? '.25' : '1';
+    }
+
+    function goTo(n) {
+      if (animLock || n === cur || n < 0 || n >= total) return;
+      animLock = true;
+      const dir = n > cur ? 1 : -1;
+      slides[cur].classList.remove('active');
+      slides[cur].classList.add('exit');
+      cur = n;
+      slides[cur].style.transform = `translateX(${dir * 60}px)`;
+      slides[cur].style.opacity   = '0';
+      slides[cur].classList.add('active');
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          slides[cur].style.transform = '';
+          slides[cur].style.opacity   = '';
+        });
+      });
+      setTimeout(() => {
+        slides.forEach(s => s.classList.remove('exit'));
+        animLock = false;
+      }, 520);
+      updateUI();
+    }
+
+    document.getElementById('btnPrev').onclick = () => goTo(cur - 1);
+    document.getElementById('btnNext').onclick = () => goTo(cur + 1);
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown'  || e.key === ' ') goTo(cur + 1);
+      if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')                      goTo(cur - 1);
+    });
+
+    // swipe support
+    let tx = 0;
+    document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; });
+    document.addEventListener('touchend',   e => {
+      const dx = e.changedTouches[0].clientX - tx;
+      if (Math.abs(dx) > 50) goTo(cur + (dx < 0 ? 1 : -1));
+    });
+
+    updateUI();
+
+    // ── Slide 3: Weblink ───────────────────
+    function openBrowser() {
+      document.getElementById('browserSheet').classList.add('open');
+    }
+    function closeBrowser() {
+      document.getElementById('browserSheet').classList.remove('open');
+    }
+
+    // ── Slide 4: Applink ───────────────────
+    function triggerApplink() {
+      const btn = document.getElementById('applinkBtn');
+      btn.textContent = '⏳ 앱 실행 중...';
+      btn.classList.add('pulse');
+      setTimeout(() => {
+        btn.textContent = '✅ 앱 열림';
+        setTimeout(() => {
+          btn.textContent = '📱 앱에서 보기';
+          btn.classList.remove('pulse');
+        }, 2000);
+      }, 900);
+    }
+
+    // ── Slide 5: Coupon ────────────────────
+    function triggerCoupon() {
+      const t = document.getElementById('couponTicket');
+      t.classList.remove('pop');
+      void t.offsetWidth;
+      t.classList.add('pop');
+    }
+
+    // ── Slide 5: Dial ──────────────────────
+    function triggerDial() {
+      const r = document.getElementById('dialRing');
+      r.classList.remove('ring');
+      void r.offsetWidth;
+      r.classList.add('ring');
+    }
+  </script>
+</body>
+</html>
